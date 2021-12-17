@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "firebase-admin": "^10.0.1",
+    "firebase-functions": "^3.16.0",
     "ibm-watson": "^6.2.1"
+  },
+  "devDependencies": {
+    "eslint-plugin-promise": "^5.2.0"
   }
 }
