@@ -5,7 +5,7 @@ const params = require('./params');
 
 const { promisify } = require('util');
 const exec = promisify(require('child_process').exec);
-
+const { transcript } = require('./transcript_en.js');
 // import axios from 'axios';
 // import SpeechToTextV1 from 'ibm-watson/speech-to-text/v1.js';
 // import { IamAuthenticator } from 'ibm-watson/auth/index.js';
@@ -26,8 +26,12 @@ admin.initializeApp();
 // firestore entry created after file has been upload (double writing? :/)
 // rather upload to cloud storage bucket , act on that
 // onFinalize
-exports.IBMSpeechToText = functions.storage
-  .object()
+
+//embed userId into trigger function
+exports.IBMSpeechToText = functions
+  .region('asia-southeast1')
+  .runWith({ timeoutSeconds: 540 })
+  .storage.object()
   .onFinalize(async (object) => {
     const fileBucket = object.bucket; // The Storage bucket that contains the file.
     const filePath = object.name; // File path in the bucket.
@@ -56,18 +60,38 @@ exports.IBMSpeechToText = functions.storage
     var paramsAudio = {
       audio: response.data,
       contentType: 'application/octet-stream',
-      ...params,
+      model: 'en-US_NarrowbandModel',
+      maxAlternatives: 1,
+      interimResults: false,
+      timestamps: true,
+      profanityFilter: true,
+      smartFormatting: true,
+      speakerLabels: false,
+      processingMetrics: false,
+      audioMetrics: false,
+      endOfPhraseSilenceTime: 0.8, // default: 0.8
+      splitTranscriptAtPhraseEnd: true,
+      speechDetectorSensitivity: 0.5, // default: 0.5, 1.0 suppresses no audio
+      backgroundAudioSuppression: 0.0, // default:0.0, 1.0 suppresses all audio
     };
-    let results = { result: 'test' };
-    results = await speechToText.recognize(paramsAudio);
-    console.log('results', JSON.stringify(results, null, 2));
+    let results = transcript;
+    console.log('paramsAudio :>> ', paramsAudio);
+    // results = await speechToText.recognize(paramsAudio);
+    console.log('results', results);
+    // console.log('results', JSON.stringify(results, null, 2));
     //update firestore with the results
-    return admin
-      .firestore()
-      .collection('transcripts')
-      .doc()
-      .create(results)
-      .catch((e) => {
-        console.error('error in saving transcript to firestore', e);
-      });
+    return (
+      admin
+        .firestore()
+        .collection('transcripts')
+        // to name doc after userId
+        .doc('transcript')
+        .set({ response: JSON.stringify(results) })
+        // .set({ response: JSON.stringify(results[0]) })
+        .catch((e) => {
+          console.error('error in saving transcript to firestore', e);
+        })
+    );
   });
+//TODO get result from frontend, use to cut transcript
+//test on deployed app
