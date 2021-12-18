@@ -33,6 +33,12 @@ exports.IBMSpeechToText = functions
   .runWith({ timeoutSeconds: 540 })
   .storage.object()
   .onFinalize(async (object) => {
+    console.log('object', object);
+    if (!object.name.startsWith('uploads/')) {
+      console.log(`File ${object.name} is not a user audio. Ignoring it.`);
+      return null;
+    }
+    const [folder, userId, filename] = object.name.split('/');
     const fileBucket = object.bucket; // The Storage bucket that contains the file.
     const filePath = object.name; // File path in the bucket.
     const contentType = object.contentType; // File content type.
@@ -41,9 +47,7 @@ exports.IBMSpeechToText = functions
       return functions.logger.log('This is not an audio.');
     }
     console.log('contentType :>> ', contentType);
-    const myFile = admin.storage().bucket().file(filePath);
     const audioUri = object.mediaLink;
-    // const audioUri = `gs://${fileBucket}/${filePath}`;
     const speechToText = new SpeechToTextV1({
       authenticator: new IamAuthenticator({
         apikey: functions.config().ibmwatsonsapi.key,
@@ -75,9 +79,8 @@ exports.IBMSpeechToText = functions
       backgroundAudioSuppression: 0.0, // default:0.0, 1.0 suppresses all audio
     };
     let results = transcript;
-    console.log('paramsAudio :>> ', paramsAudio);
     // results = await speechToText.recognize(paramsAudio);
-    console.log('results', results);
+    // console.log('results', results);
     // console.log('results', JSON.stringify(results, null, 2));
     //update firestore with the results
     return (
@@ -85,7 +88,7 @@ exports.IBMSpeechToText = functions
         .firestore()
         .collection('transcripts')
         // to name doc after userId
-        .doc('transcript')
+        .doc(userId)
         .set({ response: JSON.stringify(results) })
         // .set({ response: JSON.stringify(results[0]) })
         .catch((e) => {
