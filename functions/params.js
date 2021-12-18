@@ -2,9 +2,7 @@
 exports.params = {
   objectMode: true,
   contentType: "application/octet-stream",
-  // model: 'en-US_Multimedia',
   model: "en-US_NarrowbandModel",
-  // model: 'en-US_BroadbandModel',
   maxAlternatives: 1,
   interimResults: false,
   timestamps: true,
