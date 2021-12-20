@@ -1,21 +1,14 @@
 const axios = require('axios');
 const SpeechToTextV1 = require('ibm-watson/speech-to-text/v1.js');
 const { IamAuthenticator } = require('ibm-watson/auth/index.js');
-const params = require('./params');
 
-const { promisify } = require('util');
-const exec = promisify(require('child_process').exec);
+// const { promisify } = require('util');
+// const exec = promisify(require('child_process').exec);
 const { transcript } = require('./transcript_en.js');
-// import axios from 'axios';
-// import SpeechToTextV1 from 'ibm-watson/speech-to-text/v1.js';
-// import { IamAuthenticator } from 'ibm-watson/auth/index.js';
-
-// import { params } from './params.js';
-const path = require('path');
-const os = require('os');
+// const path = require('path');
+// const os = require('os');
 
 const functions = require('firebase-functions');
-// const request = require('request-promise');
 // for FCM, authentication, firebase realtime database
 const admin = require('firebase-admin');
 admin.initializeApp();
@@ -46,7 +39,7 @@ exports.IBMSpeechToText = functions
     if (!contentType.startsWith('audio/')) {
       return functions.logger.log('This is not an audio.');
     }
-    console.log('contentType :>> ', contentType);
+
     const audioUri = object.mediaLink;
     const speechToText = new SpeechToTextV1({
       authenticator: new IamAuthenticator({
@@ -54,13 +47,14 @@ exports.IBMSpeechToText = functions
       }),
       serviceUrl: functions.config().ibmwatsonsapi.url,
     });
-    functions.logger.log(audioUri);
+
     console.log('audioUri :>> ', audioUri);
     const response = await axios({
       method: 'get',
       url: audioUri,
       responseType: 'stream',
     });
+
     var paramsAudio = {
       audio: response.data,
       contentType: 'application/octet-stream',
@@ -70,7 +64,7 @@ exports.IBMSpeechToText = functions
       timestamps: true,
       profanityFilter: true,
       smartFormatting: true,
-      speakerLabels: false,
+      speakerLabels: true,
       processingMetrics: false,
       audioMetrics: false,
       endOfPhraseSilenceTime: 0.8, // default: 0.8
@@ -79,22 +73,36 @@ exports.IBMSpeechToText = functions
       backgroundAudioSuppression: 0.0, // default:0.0, 1.0 suppresses all audio
     };
     let results = transcript;
+    // UNCOMMENT TO ACTIVE SPEECTOTTEXT
     // results = await speechToText.recognize(paramsAudio);
     // console.log('results', results);
     // console.log('results', JSON.stringify(results, null, 2));
+    // TODO: remove audio file from storage
+    const bucket = admin.storage().bucket();
+    console.log('bucket', bucket);
+    // bucket
+    //   .deleteFiles({
+    //     prefix: `${folder}/${userId}/${filename}`,
+    //   })
+    //   .then((response) => {
+    //     console.log('response from deleteFiles :>> ', response);
+    //     return response;
+    //   })
+    //   .catch((e) => {
+    //     console.log('error in deleting file', e);
+    //   });
+
     //update firestore with the results
-    return (
-      admin
-        .firestore()
-        .collection('transcripts')
-        // to name doc after userId
-        .doc(userId)
-        .set({ response: JSON.stringify(results) })
-        // .set({ response: JSON.stringify(results[0]) })
-        .catch((e) => {
-          console.error('error in saving transcript to firestore', e);
-        })
-    );
+    return admin
+      .firestore()
+      .collection(`users`)
+      .doc(userId)
+      .collection('transcript')
+      .doc(filename)
+      .create({ response: JSON.stringify(results) })
+      .catch((e) => {
+        console.error('error in saving transcript to firestore', e);
+      });
   });
-//TODO get result from frontend, use to cut transcript
+
 //test on deployed app
