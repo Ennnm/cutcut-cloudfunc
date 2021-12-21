@@ -78,19 +78,13 @@ exports.IBMSpeechToText = functions
     // console.log('results', results);
     // console.log('results', JSON.stringify(results, null, 2));
     // TODO: remove audio file from storage
+
     const bucket = admin.storage().bucket();
-    console.log('bucket', bucket);
-    // bucket
-    //   .deleteFiles({
-    //     prefix: `${folder}/${userId}/${filename}`,
-    //   })
-    //   .then((response) => {
-    //     console.log('response from deleteFiles :>> ', response);
-    //     return response;
-    //   })
-    //   .catch((e) => {
-    //     console.log('error in deleting file', e);
-    //   });
+    const path = object.name;
+    bucket.file(path).delete();
+
+    //  `${folder}/${userId}/${filename}`)
+    console.log('path', path);
 
     //update firestore with the results
     return admin
