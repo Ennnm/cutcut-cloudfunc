@@ -1,0 +1,23 @@
+object {
+  "timeStorageClassUpdated": "2021-12-21T15:21:32.425Z",
+  "mediaLink": "https://www.googleapis.com/download/storage/v1/b/cutcut-2bc5f.appspot.com/o/uploads%2FmrvSbSHilieyWalFVRwHFlcIHrm1%2F59352353-52a7-415b-97bd-106f45035711?generation=1640100092413954&alt=media",
+  "selfLink": "https://www.googleapis.com/storage/v1/b/cutcut-2bc5f.appspot.com/o/uploads%2FmrvSbSHilieyWalFVRwHFlcIHrm1%2F59352353-52a7-415b-97bd-106f45035711",
+  "id": "cutcut-2bc5f.appspot.com/uploads/mrvSbSHilieyWalFVRwHFlcIHrm1/59352353-52a7-415b-97bd-106f45035711/1640100092413954",
+  "metadata": {
+    "firebaseStorageDownloadTokens": "fc850e9c-e082-4eb2-975b-084acb4bd963"
+  },
+  "storageClass": "STANDARD",
+  "crc32c": "BrPbVw==",
+  "timeCreated": "2021-12-21T15:21:32.425Z",
+  "size": "454657",
+  "etag": "CIKQnvuY9fQCEAE=",
+  "updated": "2021-12-21T15:21:32.425Z",
+  "bucket": "cutcut-2bc5f.appspot.com",
+  "md5Hash": "vq8LV7nlEgpvyE2MCihFxA==",
+  "name": "uploads/mrvSbSHilieyWalFVRwHFlcIHrm1/59352353-52a7-415b-97bd-106f45035711",
+  "contentType": "audio/aac",
+  "generation": "1640100092413954",
+  "kind": "storage#object",
+  "metageneration": "1",
+  "contentDisposition": "inline; filename*=utf-8''59352353-52a7-415b-97bd-106f45035711"
+}

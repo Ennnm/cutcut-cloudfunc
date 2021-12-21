@@ -26,7 +26,7 @@ exports.IBMSpeechToText = functions
   .runWith({ timeoutSeconds: 540 })
   .storage.object()
   .onFinalize(async (object) => {
-    console.log('object', object);
+    functions.logger.log('object', object);
     if (!object.name.startsWith('uploads/')) {
       console.log(`File ${object.name} is not a user audio. Ignoring it.`);
       return null;
@@ -39,22 +39,38 @@ exports.IBMSpeechToText = functions
     if (!contentType.startsWith('audio/')) {
       return functions.logger.log('This is not an audio.');
     }
-
+    //for local emulator
     const audioUri = object.mediaLink;
+    // const audioUri = `gs://${object.bucket}/${object.name}`;
     const speechToText = new SpeechToTextV1({
       authenticator: new IamAuthenticator({
         apikey: functions.config().ibmwatsonsapi.key,
       }),
       serviceUrl: functions.config().ibmwatsonsapi.url,
     });
-
     console.log('audioUri :>> ', audioUri);
+    const bucket = admin.storage().bucket();
+    const downloadUrl = await bucket
+      .file(object.name)
+      .getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 1000 * 60 * 10,
+      })
+      .then((signedUrls) => {
+        return signedUrls[0];
+      })
+      .catch((e) => {
+        functions.logger.error('error in getting signedurl', e);
+      });
+    functions.logger.log('downloadUrl', downloadUrl);
+
     const response = await axios({
       method: 'get',
-      url: audioUri,
+      url: downloadUrl,
       responseType: 'stream',
     }).catch((e) => {
-      console.log('error in streaming audioUri', e);
+      functions.logger.error('error in streaming audioUri', e);
+      // console.log('error in streaming audioUri', e);
     });
 
     var paramsAudio = {
@@ -74,16 +90,15 @@ exports.IBMSpeechToText = functions
       speechDetectorSensitivity: 0.5, // default: 0.5, 1.0 suppresses no audio
       backgroundAudioSuppression: 0.0, // default:0.0, 1.0 suppresses all audio
     };
-    let results = transcript;
     // UNCOMMENT TO ACTIVE SPEECTOTTEXT
     results = await speechToText.recognize(paramsAudio).catch((e) => {
-      console.log('error in IBM recognition', e);
+      functions.logger.error('error in IBM recognition', e);
+      // console.log('error in IBM recognition', e);
     });
     // console.log('results', results);
     // console.log('results', JSON.stringify(results, null, 2));
     // TODO: remove audio file from storage
 
-    const bucket = admin.storage().bucket();
     const path = object.name;
     bucket.file(path).delete();
 
