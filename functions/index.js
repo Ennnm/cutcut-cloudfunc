@@ -53,6 +53,8 @@ exports.IBMSpeechToText = functions
       method: 'get',
       url: audioUri,
       responseType: 'stream',
+    }).catch((e) => {
+      console.log('error in streaming audioUri', e);
     });
 
     var paramsAudio = {
@@ -74,7 +76,9 @@ exports.IBMSpeechToText = functions
     };
     let results = transcript;
     // UNCOMMENT TO ACTIVE SPEECTOTTEXT
-    // results = await speechToText.recognize(paramsAudio);
+    results = await speechToText.recognize(paramsAudio).catch((e) => {
+      console.log('error in IBM recognition', e);
+    });
     // console.log('results', results);
     // console.log('results', JSON.stringify(results, null, 2));
     // TODO: remove audio file from storage
